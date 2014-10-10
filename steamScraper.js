@@ -21,7 +21,9 @@ function lookupGame(appId, scraper, callback) {
     SteamGame.findOne({
         appId: appId
     }, function(err, game) {
-        if (err == null && game) {
+        if (err) {
+            callback(err);
+        } else if (game) {
             console.log('found ' + appId + ' as [' + game.name + ']');
             if (typeof game.isGame == 'undefined') {
                 scraper.getGameFeatures(appId, true, saveGame, callback)
@@ -30,7 +32,6 @@ function lookupGame(appId, scraper, callback) {
                 callback();
             }
         } else {
-            newCount++;
             scraper.getGameFeatures(appId, false, saveGame, callback)
         }
     });
@@ -41,6 +42,9 @@ function saveGame(game, appId, exists, callback) {
         SteamGame.findOne({
             appId: appId
         }, function(err, existGame) {
+            if(err){
+              callback(err);
+            }
             existGame.name = game.name;
             existGame.features = game.features;
             existGame.genres = game.genres;
@@ -59,6 +63,9 @@ function saveGame(game, appId, exists, callback) {
 
 var steamScraper = function() {
     this._baseUrlApp = 'http://store.steampowered.com/app/';
+    this._headers = {
+      'Cookie': 'birthtime=157795201; lastagecheckage=1-January-1975'
+    };
 }
 
 steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, callback) {
@@ -68,12 +75,9 @@ steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, c
     /*Set the options for request.  If we don't do not set the cookie for
     birthtime, GETs for M-rated games will return the birthdate-check page
     */
-
     var options = {
         url: myUrl,
-        headers: {
-            'Cookie': 'birthtime=157795201; lastagecheckage=1-January-1975'
-        }
+        headers: this._headers
     };
 
     request(options,
@@ -103,7 +107,6 @@ steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, c
                 console.log($(this).text());
                 result.features.push($(this).text())
             });
-
             //Get a list of genres associated with the game
             $('.details_block a').each(function() {
                 var url = $(this).attr('href');
@@ -111,7 +114,6 @@ steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, c
                     result.genres.push($(this).text());
                 }
             });
-
             /*
             Check the breadcrumbs at the top of the page
             to see if this item found under 'All Games'
@@ -121,33 +123,12 @@ steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, c
                 result.isGame = false;
             } else {
                 result.isGame = true;
-                if (!exists) {
-                    newGames++;
-                }
             }
 
             saveCallback(result, appId, exists, callback);
         }
     );
 };
-
-var myScraper = new steamScraper();
-// myScraper.getGameFeatures(process.argv[2], fileWriter);
-
-// create a queue object with concurrency 2
-var appIds = ['10', '20', '30', '205', '210', '60', '70', '80', '100', '130'];
-
-var q = async.queue(function(task, callback) {
-    lookupGame(task, myScraper, callback);
-}, 10);
-
-
-// assign a callback
-q.drain = function() {
-    console.log("Processed all AppIDs.");
-}
-
-// add some items to the queue (batch-wise)
 
 function readJSONFile(filename, callback) {
     require("fs").readFile(filename, function(err, data) {
@@ -163,12 +144,18 @@ function readJSONFile(filename, callback) {
     });
 }
 
-// q.push('49520', function (err) {
-//   console.log('finished processing app');
-// });
-var appIDArray = [];
-var newCount;
-var newGames;
+var myScraper = new steamScraper();
+
+var q = async.queue(function(task, callback) {
+    lookupGame(task, myScraper, callback);
+}, 10);
+
+// assign a callback
+q.drain = function() {
+    console.log("Processed all AppIDs.");
+}
+
+
 
 readJSONFile("myGames.json", function(err, json) {
     if (err) {
