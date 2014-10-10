@@ -5,7 +5,7 @@ var request = require('request'),
     async = require('async'),
     mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/steamScraper2');
+mongoose.connect('mongodb://localhost/steamScraper');
 
 var SteamGameSchema = new mongoose.Schema({
     appId: Number,
