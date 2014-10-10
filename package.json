@@ -1,0 +1,19 @@
+{
+  "name": "scraping",
+  "version": "0.0.1",
+  "description": "Scraper for Steam Store",
+  "public": false,
+  "main": "index.js",
+  "author": "Matt Clawson",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies" :{
+  	"request": "latest",
+  	"cheerio": "latest",
+    "async" : "latest",
+    "mongoose": "~3.8.8"
+  }
+}
