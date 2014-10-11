@@ -161,7 +161,8 @@ q.drain = function() {
 
 readJSONFile("myGames.json", function(err, json) {
     if (err) {
-        throw err;
+        console.log("Couldn't open file");
+        process.exit(1);
     }
     console.log("Read " + json.response.games.length + " app IDs.");
     var appIDArray = [];
