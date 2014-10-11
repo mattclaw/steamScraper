@@ -25,14 +25,14 @@ function lookupGame(appId, scraper, callback) {
             callback(err);
         } else if (game) {
             console.log('found ' + appId + ' as [' + game.name + ']');
-            if (typeof game.isGame == 'undefined') {
-                scraper.getGameFeatures(appId, true, saveGame, callback)
+            if (typeof game.isGame === 'undefined') {
+                scraper.getGameFeatures(appId, true, saveGame, callback);
             } else {
                 console.log('already processed');
                 callback();
             }
         } else {
-            scraper.getGameFeatures(appId, false, saveGame, callback)
+            scraper.getGameFeatures(appId, false, saveGame, callback);
         }
     });
 }
@@ -66,10 +66,12 @@ var steamScraper = function() {
     this._headers = {
       'Cookie': 'birthtime=157795201; lastagecheckage=1-January-1975'
     };
-}
+};
 
 steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, callback) {
-    if (typeof appId != 'string') return false;
+    if (typeof appId !== 'string'){
+        return false;
+    }
     var myUrl = this._baseUrlApp + appId;
 
     /*Set the options for request.  If we don't do not set the cookie for
@@ -104,8 +106,9 @@ steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, c
 
             //Get the list of features for the game
             $('.game_area_details_specs .name').each(function() {
-                console.log($(this).text());
-                result.features.push($(this).text())
+                var feature = $(this).text();
+                console.log(feature);
+                result.features.push(feature);
             });
             //Get a list of genres associated with the game
             $('.details_block a').each(function() {
@@ -119,7 +122,7 @@ steamScraper.prototype.getGameFeatures = function(appId, exists, saveCallback, c
             to see if this item found under 'All Games'
             Non-games (software, trailers) won't have this value.
             */
-            if ($('.breadcrumbs').text().indexOf('All Games') == -1) {
+            if ($('.breadcrumbs').text().indexOf('All Games') === -1) {
                 result.isGame = false;
             } else {
                 result.isGame = true;
@@ -153,9 +156,8 @@ var q = async.queue(function(task, callback) {
 // assign a callback
 q.drain = function() {
     console.log("Processed all AppIDs.");
-}
-
-
+    process.exit(0);
+};
 
 readJSONFile("myGames.json", function(err, json) {
     if (err) {
